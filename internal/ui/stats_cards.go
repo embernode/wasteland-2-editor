@@ -59,7 +59,10 @@ func newStatsCards() *StatsCards {
 		card("ATTR POINTS", s.attrPts),
 		card("SKILL POINTS", s.skillPts),
 	)
-	s.body = container.NewVBox(row, s.summary)
+	s.body = container.NewPadded(container.NewVBox(
+		row,
+		container.NewPadded(s.summary),
+	))
 	return s
 }
 
@@ -125,7 +128,9 @@ func card(caption string, content fyne.CanvasObject) fyne.CanvasObject {
 
 	label := widget.NewLabelWithStyle(caption, fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 
-	body := container.NewPadded(container.NewVBox(label, content))
+	// Double-pad: NewPadded once gives us breathing room from the border,
+	// the second wrap stops the entry from touching the caption.
+	body := container.NewPadded(container.NewPadded(container.NewVBox(label, content)))
 	return container.NewStack(border, body)
 }
 

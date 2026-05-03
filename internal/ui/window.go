@@ -98,9 +98,9 @@ func BuildMainWindow(w fyne.Window) {
 	)
 
 	w.SetContent(container.NewBorder(
-		header, nil,
-		sidebar.Container(), nil,
-		panel.Container(),
+		container.NewPadded(header), nil,
+		container.NewPadded(sidebar.Container()), nil,
+		container.NewPadded(panel.Container()),
 	))
 	w.Resize(fyne.NewSize(960, 640))
 }
