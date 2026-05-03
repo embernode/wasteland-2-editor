@@ -34,7 +34,11 @@ type SkillRow struct {
 
 func newSkillRow(key string, scale scaleKind, min, max int) *SkillRow {
 	r := &SkillRow{key: key, scale: scale, min: min, max: max}
-	r.level = widget.NewLabel(fmt.Sprintf("0/%d", max))
+	r.level = widget.NewLabelWithStyle(
+		fmt.Sprintf("0/%d", max),
+		fyne.TextAlignTrailing,
+		fyne.TextStyle{Monospace: true},
+	)
 	r.slider = widget.NewSlider(float64(min), float64(max))
 	r.slider.Step = 1
 	r.slider.OnChanged = func(v float64) {

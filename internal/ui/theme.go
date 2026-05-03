@@ -1,11 +1,20 @@
 package ui
 
 import (
+	_ "embed"
 	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
 )
+
+//go:embed fonts/SpaceGrotesk-Variable.ttf
+var spaceGroteskTTF []byte
+
+var spaceGrotesk = &fyne.StaticResource{
+	StaticName:    "SpaceGrotesk-Variable.ttf",
+	StaticContent: spaceGroteskTTF,
+}
 
 // wastelandTheme overrides Fyne's default colors with the "Post-Apocalyptic
 // Terminal" palette: amber primary, dim brown surfaces, phosphor-green for
@@ -80,6 +89,9 @@ func (wastelandTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color
 }
 
 func (wastelandTheme) Font(style fyne.TextStyle) fyne.Resource {
+	if style.Monospace {
+		return spaceGrotesk
+	}
 	return theme.DefaultTheme().Font(style)
 }
 

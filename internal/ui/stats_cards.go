@@ -126,7 +126,7 @@ func card(caption string, content fyne.CanvasObject) fyne.CanvasObject {
 	border.StrokeColor = theme.Color(theme.ColorNameSeparator)
 	border.StrokeWidth = 1
 
-	label := widget.NewLabelWithStyle(caption, fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+	label := widget.NewLabelWithStyle(caption, fyne.TextAlignCenter, fyne.TextStyle{Bold: true, Monospace: true})
 
 	// Double-pad: NewPadded once gives us breathing room from the border,
 	// the second wrap stops the entry from touching the caption.
