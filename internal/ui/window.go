@@ -14,8 +14,8 @@ import (
 	"github.com/embernode/wasteland-2-editor/internal/savegame"
 )
 
-// BuildMainWindow assembles the editor window and wires the open / save /
-// character-select controls into the model.
+// BuildMainWindow assembles the editor window: a top action bar, a left
+// character sidebar, and the per-character editing panel on the right.
 func BuildMainWindow(w fyne.Window) {
 	model := &Model{}
 	panel := NewCharacterPanel()
@@ -23,7 +23,7 @@ func BuildMainWindow(w fyne.Window) {
 	pathLabel := widget.NewLabel("No save loaded.")
 	pathLabel.Wrapping = fyne.TextTruncate
 
-	charPicker := newCharacterPicker(func(name string) {
+	sidebar := newCharacterSidebar(func(name string) {
 		if model.SelectByDisplayName(name) {
 			panel.Show(model.Current)
 		}
@@ -39,13 +39,8 @@ func BuildMainWindow(w fyne.Window) {
 			return
 		}
 		model.SetSave(save)
-		pathLabel.SetText(path)
-		names := model.CharacterNames()
-		charPicker.SetOptions(names)
-		if len(names) > 0 {
-			charPicker.SetSelected(names[0])
-			charPicker.Enable()
-		}
+		pathLabel.SetText(filepath.Base(path))
+		sidebar.SetOptions(model.CharacterNames())
 		saveBtn.Enable()
 		panel.Show(model.Current)
 	}
@@ -79,8 +74,7 @@ func BuildMainWindow(w fyne.Window) {
 		if model.Save == nil {
 			return
 		}
-		err := model.Save.Save(model.Save.Path)
-		if err != nil {
+		if err := model.Save.Save(model.Save.Path); err != nil {
 			dialog.ShowError(err, w)
 			return
 		}
@@ -102,10 +96,13 @@ func BuildMainWindow(w fyne.Window) {
 		nil,
 		pathLabel,
 	)
-	top := container.NewVBox(header, charPicker.Container(), widget.NewSeparator())
 
-	w.SetContent(container.NewBorder(top, nil, nil, nil, panel.Container()))
-	w.Resize(fyne.NewSize(820, 640))
+	w.SetContent(container.NewBorder(
+		header, nil,
+		sidebar.Container(), nil,
+		panel.Container(),
+	))
+	w.Resize(fyne.NewSize(960, 640))
 }
 
 // pickXMLPath returns the path of the first dropped URI with a .xml extension,
