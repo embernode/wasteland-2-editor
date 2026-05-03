@@ -28,7 +28,8 @@ var (
 	colOutline          = mustColor("#544434")
 	colPrimary          = mustColor("#ffb86e") // amber
 	colPrimaryHover     = mustColor("#e68a00") // hotter amber for hover/active
-	colPhosphor         = mustColor("#5dff3b") // active / focus / selection
+	colSelection        = mustColor("#492900") // dark amber — selected row bg
+	colPhosphor         = mustColor("#5dff3b") // reserved for thin focus rings only
 	colError            = mustColor("#ffb4ab")
 )
 
@@ -63,7 +64,7 @@ func (wastelandTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color
 	case theme.ColorNameFocus:
 		return colPhosphor
 	case theme.ColorNameSelection:
-		return colPhosphor
+		return colSelection
 	case theme.ColorNamePressed:
 		return colPrimaryHover
 	case theme.ColorNameMenuBackground:
