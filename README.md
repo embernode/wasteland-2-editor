@@ -26,9 +26,13 @@ Tested with Go 1.26. Fyne pulls a handful of indirect dependencies on first buil
 ## Usage
 
 1. Open or drag your `Quicksave N/Quicksave N.xml` (or any save XML) onto the window.
-2. Pick a character from the dropdown.
-3. Drag sliders on any of the four tabs.
+2. Pick a character from the sidebar.
+3. Edit anything in the stat cards or any of the four tabs.
 4. Click **Save**. The original is renamed to `*.xml.back`.
+
+The path label shows a `•` when there are unsaved edits. Loading a different save or closing the window prompts to confirm before discarding.
+
+Keyboard shortcuts: <kbd>Ctrl/Cmd+O</kbd> open, <kbd>Ctrl/Cmd+S</kbd> save.
 
 Save files live under:
 
@@ -40,8 +44,10 @@ Save files live under:
 ```
 cmd/wasteland-2-editor/  entry point
 internal/savegame/       stdlib XML parser + tests
-internal/ui/             Fyne UI (window, character panel, skill tabs/rows)
+internal/ui/             Fyne UI (window, sidebar, panel, tabs/rows, theme)
+internal/ui/fonts/       bundled TTF (Space Grotesk) + license
 delphi-original/         (gitignored) original Delphi sources, kept for reference
+TODO.md                  open feature ideas + format-blocked items
 ```
 
 ## Tests
@@ -58,6 +64,10 @@ The real-savegame tests are skipped automatically if `Quicksave 2/Quicksave 2.xm
 - Skill XP is set directly via the cumulative-cost table (`0,2,4,6,10,14,18,24,30,36,44`); intermediate values are not preserved.
 - **Max HP** is not stored in the save — Wasteland 2 derives it at runtime from attributes / level / `luckyHitpoints`. Editing CON-style attributes is the indirect way to influence it.
 - **Perks and quirks** are not present in the XML and likely live in the binary `.bin` sibling, which is not yet decoded. Trait points (`availableTraitPoints`) is also not exposed.
+
+## Credits
+
+Bundled font: [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) by Florian Karsten, licensed under the SIL Open Font License 1.1 (`internal/ui/fonts/OFL.txt`).
 
 ## License
 
