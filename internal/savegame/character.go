@@ -14,6 +14,14 @@ type Character struct {
 	Name string
 	// DisplayName is the cleaned <displayName>, e.g. "Lexcanium".
 	DisplayName string
+	// Age and Gender are read-only metadata (parsed but never written back).
+	Age    string
+	Gender string
+	// Level is the character level shown in-game.
+	Level int
+	// CurrentHP is the persisted current HP. Max HP is not stored — the
+	// game derives it at runtime from attributes / level / luckyHitpoints.
+	CurrentHP int
 	// Attributes maps attribute name -> value (1..10, raw == display).
 	Attributes map[string]int
 	// Skills maps skill name -> raw XP value. Use SkillLevel/SkillXP to
@@ -37,6 +45,8 @@ type Character struct {
 	skillStart, skillEnd             int
 	attrPointsStart, attrPointsEnd   int
 	skillPointsStart, skillPointsEnd int
+	levelStart, levelEnd             int
+	curHpStart, curHpEnd             int
 }
 
 const (
@@ -52,6 +62,15 @@ const (
 	attrPointsClose  = "</availableAttributePoints>"
 	skillPointsOpen  = "<availableSkillPoints>"
 	skillPointsClose = "</availableSkillPoints>"
+
+	levelOpen  = "<level>"
+	levelClose = "</level>"
+	curHpOpen  = "<curHp>"
+	curHpClose = "</curHp>"
+	ageOpen    = "<age>"
+	ageClose   = "</age>"
+	genderOpen  = "<gender>"
+	genderClose = "</gender>"
 
 	nameOpen         = "<name>"
 	nameClose        = "</name>"
@@ -85,6 +104,8 @@ func parseCharacter(buf []byte, start, end int) (*Character, error) {
 	c := &Character{
 		Name:        name,
 		DisplayName: cleanDisplayName(display),
+		Age:         extractInner(region, ageOpen, ageClose),
+		Gender:      extractInner(region, genderOpen, genderClose),
 		Attributes:  map[string]int{},
 		Skills:      map[string]int{},
 	}
@@ -101,6 +122,14 @@ func parseCharacter(buf []byte, start, end int) (*Character, error) {
 	}
 	if err := locateScalar(region, skillPointsOpen, skillPointsClose, start,
 		&c.skillPointsStart, &c.skillPointsEnd, &c.AvailableSkillPoints); err != nil {
+		return nil, err
+	}
+	if err := locateScalar(region, levelOpen, levelClose, start,
+		&c.levelStart, &c.levelEnd, &c.Level); err != nil {
+		return nil, err
+	}
+	if err := locateScalar(region, curHpOpen, curHpClose, start,
+		&c.curHpStart, &c.curHpEnd, &c.CurrentHP); err != nil {
 		return nil, err
 	}
 
@@ -126,6 +155,8 @@ func (c *Character) edits() []byteEdit {
 		{c.skillStart, c.skillEnd, renderPairs(skillOpen, skillClose, c.Skills, c.skillOrder)},
 		{c.attrPointsStart, c.attrPointsEnd, renderScalar(attrPointsOpen, attrPointsClose, c.AvailableAttributePoints)},
 		{c.skillPointsStart, c.skillPointsEnd, renderScalar(skillPointsOpen, skillPointsClose, c.AvailableSkillPoints)},
+		{c.levelStart, c.levelEnd, renderScalar(levelOpen, levelClose, c.Level)},
+		{c.curHpStart, c.curHpEnd, renderScalar(curHpOpen, curHpClose, c.CurrentHP)},
 	}
 }
 

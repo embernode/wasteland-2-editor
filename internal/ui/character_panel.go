@@ -8,13 +8,14 @@ import (
 	"github.com/embernode/wasteland-2-editor/internal/savegame"
 )
 
-// CharacterPanel is the per-character editing area: an unspent-points
-// header above four tabs (attributes, weapon skills, general skills,
-// technical skills). Each tab is driven by the constant skill lists in
-// package savegame.
+// CharacterPanel is the per-character editing area: a vitals header and
+// an unspent-points header above four tabs (attributes, weapon skills,
+// general skills, technical skills). Each tab is driven by the constant
+// skill lists in package savegame.
 type CharacterPanel struct {
 	body fyne.CanvasObject
 
+	vitals *VitalsBar
 	points *PointsBar
 	tabs   *container.AppTabs
 
@@ -28,6 +29,7 @@ type CharacterPanel struct {
 // loaded) state.
 func NewCharacterPanel() *CharacterPanel {
 	p := &CharacterPanel{
+		vitals:     newVitalsBar(),
 		points:     newPointsBar(),
 		attributes: newSkillTab(savegame.Attributes, scaleDirect, 1, 10),
 		weapons:    newSkillTab(savegame.WeaponSkills, scaleSkillXP, 0, 10),
@@ -40,7 +42,11 @@ func NewCharacterPanel() *CharacterPanel {
 		container.NewTabItem("General", p.general.body),
 		container.NewTabItem("Technical", p.technical.body),
 	)
-	header := container.NewVBox(p.points.body, widget.NewSeparator())
+	header := container.NewVBox(
+		p.vitals.body,
+		p.points.body,
+		widget.NewSeparator(),
+	)
 	p.body = container.NewBorder(header, nil, nil, nil, p.tabs)
 	return p
 }
@@ -48,9 +54,10 @@ func NewCharacterPanel() *CharacterPanel {
 // Container returns the Fyne object to embed in a parent layout.
 func (p *CharacterPanel) Container() fyne.CanvasObject { return p.body }
 
-// Show binds the points bar and all tabs to a character. Pass nil to clear.
+// Show binds the headers and all tabs to a character. Pass nil to clear.
 func (p *CharacterPanel) Show(c *savegame.Character) {
 	if c == nil {
+		p.vitals.clear()
 		p.points.clear()
 		p.attributes.clear()
 		p.weapons.clear()
@@ -58,6 +65,7 @@ func (p *CharacterPanel) Show(c *savegame.Character) {
 		p.technical.clear()
 		return
 	}
+	p.vitals.bind(c)
 	p.points.bind(c)
 	p.attributes.bind(c.Attributes)
 	p.weapons.bind(c.Skills)

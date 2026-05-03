@@ -9,6 +9,7 @@ A Go + Fyne port of [Tokeshy/Wasteland-2-caracter-editor](https://github.com/Tok
 - Edit attributes (Coordination / Luck / Awareness / Strength / Speed / Intelligence / Charisma)
 - Edit weapon, general, and technical skills (level 0–10)
 - Edit unspent attribute and skill points directly (independent of slider changes — moving a slider does **not** debit the point pool)
+- Edit character level and current HP; view age and sex
 - Drag-and-drop a save XML onto the window, or use **Open save…**
 - Backup-on-save: writes `<savename>.xml.back` before overwriting
 - Inventory, equipment, position, quest state — everything outside the edited fields is passed through untouched
@@ -55,7 +56,8 @@ The real-savegame tests are skipped automatically if `Quicksave 2/Quicksave 2.xm
 
 - Slider changes do not debit `availableSkillPoints` / `availableAttributePoints`. Tune those two pools yourself via the entries above the tabs if you want the in-game character sheet to show a particular number.
 - Skill XP is set directly via the cumulative-cost table (`0,2,4,6,10,14,18,24,30,36,44`); intermediate values are not preserved.
-- Trait points (`availableTraitPoints`) are not exposed yet.
+- **Max HP** is not stored in the save — Wasteland 2 derives it at runtime from attributes / level / `luckyHitpoints`. Editing CON-style attributes is the indirect way to influence it.
+- **Perks and quirks** are not present in the XML and likely live in the binary `.bin` sibling, which is not yet decoded. Trait points (`availableTraitPoints`) is also not exposed.
 
 ## License
 

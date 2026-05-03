@@ -175,6 +175,79 @@ func TestRealSave_AvailablePointsParsed(t *testing.T) {
 	}
 }
 
+func TestRealSave_VitalsParsed(t *testing.T) {
+	s, err := Load(realSavePath(t))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	// Observed values for the 7 party members in Quicksave 2.xml.
+	type want struct {
+		name      string
+		level     int
+		curHP     int
+		age       string
+		gender    string
+	}
+	cases := []want{
+		{"Hex", 30, 202, "24", "Feminine"},
+		{"Pills", 32, 269, "24", "Feminine"},
+		{"Slick", 32, 155, "28", "Masculine"},
+		{"Rose", 31, 280, "67", "Feminine"},
+		{"Lexcanium", 30, 327, "24", "Masculine"},
+		{"Pizepi Joren", 25, 254, "19", "Feminine"},
+		{"Big Bert", 30, 351, "36", "Masculine"},
+	}
+	if len(s.Characters) < len(cases) {
+		t.Fatalf("only %d characters parsed, want %d", len(s.Characters), len(cases))
+	}
+	for i, w := range cases {
+		c := s.Characters[i]
+		if c.DisplayName != w.name {
+			t.Errorf("[%d] DisplayName = %q, want %q", i, c.DisplayName, w.name)
+		}
+		if c.Level != w.level {
+			t.Errorf("[%d] %s Level = %d, want %d", i, w.name, c.Level, w.level)
+		}
+		if c.CurrentHP != w.curHP {
+			t.Errorf("[%d] %s CurrentHP = %d, want %d", i, w.name, c.CurrentHP, w.curHP)
+		}
+		if c.Age != w.age {
+			t.Errorf("[%d] %s Age = %q, want %q", i, w.name, c.Age, w.age)
+		}
+		if c.Gender != w.gender {
+			t.Errorf("[%d] %s Gender = %q, want %q", i, w.name, c.Gender, w.gender)
+		}
+	}
+}
+
+func TestRealSave_VitalsEditPersists(t *testing.T) {
+	path := realSavePath(t)
+	s, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	for _, c := range s.Characters {
+		c.Level = 99
+		c.CurrentHP = 9999
+	}
+	out, err := s.Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s2, err := Parse(out, path)
+	if err != nil {
+		t.Fatalf("re-Parse: %v", err)
+	}
+	for i, c := range s2.Characters {
+		if c.Level != 99 {
+			t.Errorf("[%d] Level = %d, want 99", i, c.Level)
+		}
+		if c.CurrentHP != 9999 {
+			t.Errorf("[%d] CurrentHP = %d, want 9999", i, c.CurrentHP)
+		}
+	}
+}
+
 func allSkillNames() []string {
 	all := append([]string{}, WeaponSkills...)
 	all = append(all, GeneralSkills...)
