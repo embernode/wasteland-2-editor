@@ -13,3 +13,6 @@ Save*/
 *.exe
 *.test
 *.out
+
+# External design assets (Stitch exports, mockups, etc.)
+*.zip
