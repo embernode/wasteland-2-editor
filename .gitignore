@@ -1,0 +1,15 @@
+# Original Delphi sources — kept locally for reference, not tracked
+delphi-original/
+
+# Wasteland 2 save files (test data — never commit)
+Quicksave*/
+Save*/
+*.xml
+*.bin
+*.back
+
+# Go build output
+/bin/
+*.exe
+*.test
+*.out
