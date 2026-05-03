@@ -23,14 +23,11 @@ func BuildMainWindow(w fyne.Window) {
 	pathLabel := widget.NewLabel("No save loaded.")
 	pathLabel.Wrapping = fyne.TextTruncate
 
-	charSelect := widget.NewSelect(nil, nil)
-	charSelect.PlaceHolder = "(open a save first)"
-	charSelect.Disable()
-	charSelect.OnChanged = func(name string) {
+	charPicker := newCharacterPicker(func(name string) {
 		if model.SelectByDisplayName(name) {
 			panel.Show(model.Current)
 		}
-	}
+	})
 
 	saveBtn := widget.NewButton("Save", nil)
 	saveBtn.Disable()
@@ -43,11 +40,11 @@ func BuildMainWindow(w fyne.Window) {
 		}
 		model.SetSave(save)
 		pathLabel.SetText(path)
-		charSelect.Options = model.CharacterNames()
-		charSelect.Refresh()
-		if len(charSelect.Options) > 0 {
-			charSelect.SetSelected(charSelect.Options[0])
-			charSelect.Enable()
+		names := model.CharacterNames()
+		charPicker.SetOptions(names)
+		if len(names) > 0 {
+			charPicker.SetSelected(names[0])
+			charPicker.Enable()
 		}
 		saveBtn.Enable()
 		panel.Show(model.Current)
@@ -105,7 +102,7 @@ func BuildMainWindow(w fyne.Window) {
 		nil,
 		pathLabel,
 	)
-	top := container.NewVBox(header, charSelect, widget.NewSeparator())
+	top := container.NewVBox(header, charPicker.Container(), widget.NewSeparator())
 
 	w.SetContent(container.NewBorder(top, nil, nil, nil, panel.Container()))
 	w.Resize(fyne.NewSize(820, 640))
