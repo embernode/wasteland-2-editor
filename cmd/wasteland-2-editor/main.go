@@ -8,7 +8,8 @@ import (
 
 func main() {
 	a := app.NewWithID("io.github.ncl8.wl2edit")
-	a.Settings().SetTheme(ui.Theme())
+	saved := a.Preferences().StringWithFallback(ui.PreferenceKeyTheme, ui.WastelandPalette.Name)
+	a.Settings().SetTheme(ui.ThemeByName(saved))
 	w := a.NewWindow("Wasteland 2 Save Editor")
 	ui.BuildMainWindow(w)
 	w.ShowAndRun()

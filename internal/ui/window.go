@@ -14,14 +14,26 @@ import (
 	"github.com/embernode/wasteland-2-editor/internal/savegame"
 )
 
+// PreferenceKeyTheme is the fyne.Preferences key used to remember the
+// active palette name across runs.
+const PreferenceKeyTheme = "theme"
+
 // BuildMainWindow assembles the editor window: a top action bar, a left
 // character sidebar, and the per-character editing panel on the right.
 func BuildMainWindow(w fyne.Window) {
+	app := fyne.CurrentApp()
 	model := &Model{}
 	panel := NewCharacterPanel()
 
 	pathLabel := widget.NewLabel("No save loaded.")
 	pathLabel.Wrapping = fyne.TextTruncate
+
+	themeSelect := widget.NewSelect(ThemeNames(), nil)
+	themeSelect.SetSelected(app.Preferences().StringWithFallback(PreferenceKeyTheme, WastelandPalette.Name))
+	themeSelect.OnChanged = func(name string) {
+		app.Settings().SetTheme(ThemeByName(name))
+		app.Preferences().SetString(PreferenceKeyTheme, name)
+	}
 
 	sidebar := newCharacterSidebar(func(name string) {
 		if model.SelectByDisplayName(name) {
@@ -93,7 +105,7 @@ func BuildMainWindow(w fyne.Window) {
 	header := container.NewBorder(
 		nil, nil,
 		container.NewHBox(openBtn, saveBtn),
-		nil,
+		container.NewHBox(widget.NewLabel("Theme:"), themeSelect),
 		pathLabel,
 	)
 

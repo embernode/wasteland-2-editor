@@ -16,95 +16,147 @@ var spaceGrotesk = &fyne.StaticResource{
 	StaticContent: spaceGroteskTTF,
 }
 
-// wastelandTheme overrides Fyne's default colors with the "Post-Apocalyptic
-// Terminal" palette: amber primary, dim brown surfaces, phosphor-green for
-// active state. Fonts and icon set fall back to the default theme.
-type wastelandTheme struct{}
+// Palette is a complete color scheme. Add a new theme by defining another
+// Palette value and registering it in themesByName.
+type Palette struct {
+	Name string
 
-var _ fyne.Theme = (*wastelandTheme)(nil)
+	Surface          color.Color
+	SurfaceLow       color.Color
+	SurfaceContainer color.Color
+	SurfaceHigh      color.Color
+	OnSurface        color.Color
+	OnSurfaceMuted   color.Color
+	Outline          color.Color
 
-// Theme returns the editor's custom Fyne theme.
-func Theme() fyne.Theme { return wastelandTheme{} }
+	Primary      color.Color
+	PrimaryHover color.Color
+	Selection    color.Color
+	Focus        color.Color
+	Error        color.Color
+}
 
-// Palette — values from the Stitch design's "Grimy Desert" spectrum.
-var (
-	colSurface          = mustColor("#17130f")
-	colSurfaceContainer = mustColor("#231f1b")
-	colSurfaceLow       = mustColor("#1f1b17")
-	colSurfaceHigh      = mustColor("#2e2925")
-	colOnSurface        = mustColor("#eae1da")
-	colOnSurfaceMuted   = mustColor("#dac2ae")
-	colOutline          = mustColor("#544434")
-	colPrimary          = mustColor("#ffb86e") // amber
-	colPrimaryHover     = mustColor("#e68a00") // hotter amber for hover/active
-	colSelection        = mustColor("#492900") // dark amber — selected row bg
-	colPhosphor         = mustColor("#5dff3b") // reserved for thin focus rings only
-	colError            = mustColor("#ffb4ab")
-)
+// WastelandPalette — Stitch "Post-Apocalyptic Terminal": amber primary,
+// grimy desert browns, phosphor green reserved for thin focus rings.
+var WastelandPalette = Palette{
+	Name:             "Wasteland",
+	Surface:          mustColor("#17130f"),
+	SurfaceLow:       mustColor("#1f1b17"),
+	SurfaceContainer: mustColor("#231f1b"),
+	SurfaceHigh:      mustColor("#2e2925"),
+	OnSurface:        mustColor("#eae1da"),
+	OnSurfaceMuted:   mustColor("#dac2ae"),
+	Outline:          mustColor("#544434"),
+	Primary:          mustColor("#ffb86e"),
+	PrimaryHover:     mustColor("#e68a00"),
+	Selection:        mustColor("#492900"),
+	Focus:            mustColor("#5dff3b"),
+	Error:            mustColor("#ffb4ab"),
+}
 
-// Color overrides. Anything we don't handle falls through to the default
-// dark theme so we get sensible values for menus, scrollbars, etc.
-func (wastelandTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
+// PrecisionPalette — Stitch "Precision Utility": deep-charcoal background,
+// electric cyan accent, professional dashboard feel.
+var PrecisionPalette = Palette{
+	Name:             "Precision",
+	Surface:          mustColor("#121414"),
+	SurfaceLow:       mustColor("#1a1c1c"),
+	SurfaceContainer: mustColor("#1e2020"),
+	SurfaceHigh:      mustColor("#282a2b"),
+	OnSurface:        mustColor("#e2e2e2"),
+	OnSurfaceMuted:   mustColor("#b9cacb"),
+	Outline:          mustColor("#3b494b"),
+	Primary:          mustColor("#00dbe9"),
+	PrimaryHover:     mustColor("#00f0ff"),
+	Selection:        mustColor("#004f54"),
+	Focus:            mustColor("#00f0ff"),
+	Error:            mustColor("#ffb4ab"),
+}
+
+var themesByName = map[string]Palette{
+	WastelandPalette.Name: WastelandPalette,
+	PrecisionPalette.Name: PrecisionPalette,
+}
+
+// ThemeNames returns the registered palette names in display order.
+func ThemeNames() []string {
+	return []string{WastelandPalette.Name, PrecisionPalette.Name}
+}
+
+// ThemeByName looks up a palette wrapped in a fyne.Theme. Falls back to
+// Wasteland if name is unknown.
+func ThemeByName(name string) fyne.Theme {
+	p, ok := themesByName[name]
+	if !ok {
+		p = WastelandPalette
+	}
+	return paletteTheme{p}
+}
+
+// paletteTheme is the fyne.Theme implementation backed by a Palette.
+type paletteTheme struct{ p Palette }
+
+var _ fyne.Theme = paletteTheme{}
+
+func (t paletteTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
 	switch name {
 	case theme.ColorNameBackground:
-		return colSurface
+		return t.p.Surface
 	case theme.ColorNameForeground:
-		return colOnSurface
+		return t.p.OnSurface
 	case theme.ColorNameForegroundOnPrimary:
-		return colSurface
+		return t.p.Surface
 	case theme.ColorNamePrimary:
-		return colPrimary
+		return t.p.Primary
 	case theme.ColorNameButton:
-		return colSurfaceContainer
+		return t.p.SurfaceContainer
 	case theme.ColorNameDisabledButton:
-		return colSurfaceLow
+		return t.p.SurfaceLow
 	case theme.ColorNameInputBackground:
-		return colSurfaceLow
+		return t.p.SurfaceLow
 	case theme.ColorNameInputBorder:
-		return colOutline
+		return t.p.Outline
 	case theme.ColorNameSeparator:
-		return colOutline
+		return t.p.Outline
 	case theme.ColorNameDisabled:
-		return colOnSurfaceMuted
+		return t.p.OnSurfaceMuted
 	case theme.ColorNamePlaceHolder:
-		return colOnSurfaceMuted
+		return t.p.OnSurfaceMuted
 	case theme.ColorNameHover:
-		return colSurfaceHigh
+		return t.p.SurfaceHigh
 	case theme.ColorNameFocus:
-		return colPhosphor
+		return t.p.Focus
 	case theme.ColorNameSelection:
-		return colSelection
+		return t.p.Selection
 	case theme.ColorNamePressed:
-		return colPrimaryHover
+		return t.p.PrimaryHover
 	case theme.ColorNameMenuBackground:
-		return colSurfaceContainer
+		return t.p.SurfaceContainer
 	case theme.ColorNameOverlayBackground:
-		return colSurfaceHigh
+		return t.p.SurfaceHigh
 	case theme.ColorNameError:
-		return colError
+		return t.p.Error
 	case theme.ColorNameScrollBar, theme.ColorNameShadow:
 		return color.NRGBA{R: 0, G: 0, B: 0, A: 96}
 	}
 	return theme.DefaultTheme().Color(name, theme.VariantDark)
 }
 
-func (wastelandTheme) Font(style fyne.TextStyle) fyne.Resource {
+func (paletteTheme) Font(style fyne.TextStyle) fyne.Resource {
 	if style.Monospace {
 		return spaceGrotesk
 	}
 	return theme.DefaultTheme().Font(style)
 }
 
-func (wastelandTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
+func (paletteTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
 	return theme.DefaultTheme().Icon(name)
 }
 
-func (wastelandTheme) Size(name fyne.ThemeSizeName) float32 {
+func (paletteTheme) Size(name fyne.ThemeSizeName) float32 {
 	return theme.DefaultTheme().Size(name)
 }
 
-// mustColor parses a #RRGGBB hex string. Panics if invalid — only used on
-// package-level constants, so a typo fails fast at startup.
+// mustColor parses a #RRGGBB hex string. Panics on a typo at startup.
 func mustColor(hex string) color.NRGBA {
 	if len(hex) != 7 || hex[0] != '#' {
 		panic("invalid color literal: " + hex)

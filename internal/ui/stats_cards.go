@@ -13,6 +13,35 @@ import (
 	"github.com/embernode/wasteland-2-editor/internal/savegame"
 )
 
+// themedBorder is a 1px outline that re-reads the theme's separator color
+// on every Refresh(). Without it, swapping themes leaves the card borders
+// stuck at the old palette's color.
+type themedBorder struct{ widget.BaseWidget }
+
+func newThemedBorder() *themedBorder {
+	b := &themedBorder{}
+	b.ExtendBaseWidget(b)
+	return b
+}
+
+func (b *themedBorder) CreateRenderer() fyne.WidgetRenderer {
+	rect := canvas.NewRectangle(color.Transparent)
+	rect.StrokeWidth = 1
+	rect.StrokeColor = theme.Color(theme.ColorNameSeparator)
+	return &themedBorderRenderer{rect: rect}
+}
+
+type themedBorderRenderer struct{ rect *canvas.Rectangle }
+
+func (r *themedBorderRenderer) Layout(s fyne.Size)        { r.rect.Resize(s) }
+func (r *themedBorderRenderer) MinSize() fyne.Size        { return fyne.Size{} }
+func (r *themedBorderRenderer) Objects() []fyne.CanvasObject { return []fyne.CanvasObject{r.rect} }
+func (r *themedBorderRenderer) Destroy()                  {}
+func (r *themedBorderRenderer) Refresh() {
+	r.rect.StrokeColor = theme.Color(theme.ColorNameSeparator)
+	r.rect.Refresh()
+}
+
 // StatsCards is the per-character header that replaces the older vitals +
 // points bars. It renders four editable stats as small bordered cards
 // (Level, Current HP, Unspent Attribute Points, Unspent Skill Points) and
@@ -122,16 +151,12 @@ func summaryLine(c *savegame.Character) string {
 
 // card wraps content in a small bordered box with an uppercase caption.
 func card(caption string, content fyne.CanvasObject) fyne.CanvasObject {
-	border := canvas.NewRectangle(color.Transparent)
-	border.StrokeColor = theme.Color(theme.ColorNameSeparator)
-	border.StrokeWidth = 1
-
 	label := widget.NewLabelWithStyle(caption, fyne.TextAlignCenter, fyne.TextStyle{Bold: true, Monospace: true})
 
 	// Double-pad: NewPadded once gives us breathing room from the border,
 	// the second wrap stops the entry from touching the caption.
 	body := container.NewPadded(container.NewPadded(container.NewVBox(label, content)))
-	return container.NewStack(border, body)
+	return container.NewStack(newThemedBorder(), body)
 }
 
 // newPointsEntry returns an Entry that calls onCommit when the text parses
