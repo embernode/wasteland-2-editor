@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 
@@ -102,6 +103,20 @@ func BuildMainWindow(w fyne.Window) {
 		}
 	})
 
+	// Cmd/Ctrl-O = Open save…  ;  Cmd/Ctrl-S = Save (when enabled).
+	w.Canvas().AddShortcut(
+		&desktop.CustomShortcut{KeyName: fyne.KeyO, Modifier: fyne.KeyModifierShortcutDefault},
+		func(fyne.Shortcut) { openBtn.OnTapped() },
+	)
+	w.Canvas().AddShortcut(
+		&desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: fyne.KeyModifierShortcutDefault},
+		func(fyne.Shortcut) {
+			if !saveBtn.Disabled() {
+				saveBtn.OnTapped()
+			}
+		},
+	)
+
 	header := container.NewBorder(
 		nil, nil,
 		container.NewHBox(openBtn, saveBtn),
@@ -117,16 +132,14 @@ func BuildMainWindow(w fyne.Window) {
 	w.Resize(fyne.NewSize(960, 640))
 }
 
-// pickXMLPath returns the path of the first dropped URI with a .xml extension,
-// falling back to the first URI if none match. Returns "" if uris is empty.
+// pickXMLPath returns the path of the first dropped URI with a .xml extension.
+// Non-XML drops are ignored — silently dropping is friendlier than parsing
+// random files and showing a confusing error.
 func pickXMLPath(uris []fyne.URI) string {
 	for _, u := range uris {
 		if u != nil && strings.EqualFold(filepath.Ext(u.Path()), ".xml") {
 			return u.Path()
 		}
-	}
-	if len(uris) > 0 && uris[0] != nil {
-		return uris[0].Path()
 	}
 	return ""
 }

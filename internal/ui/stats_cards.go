@@ -34,7 +34,10 @@ func (b *themedBorder) CreateRenderer() fyne.WidgetRenderer {
 type themedBorderRenderer struct{ rect *canvas.Rectangle }
 
 func (r *themedBorderRenderer) Layout(s fyne.Size)        { r.rect.Resize(s) }
-func (r *themedBorderRenderer) MinSize() fyne.Size        { return fyne.Size{} }
+// MinSize returns 1×1 so the rectangle always paints — parents (Stack /
+// container.NewBorder) override this with the sibling's actual size, but
+// the defensive minimum keeps the widget visible if reused elsewhere.
+func (r *themedBorderRenderer) MinSize() fyne.Size        { return fyne.NewSize(1, 1) }
 func (r *themedBorderRenderer) Objects() []fyne.CanvasObject { return []fyne.CanvasObject{r.rect} }
 func (r *themedBorderRenderer) Destroy()                  {}
 func (r *themedBorderRenderer) Refresh() {
