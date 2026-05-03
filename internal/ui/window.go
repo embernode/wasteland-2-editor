@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -34,6 +35,24 @@ func BuildMainWindow(w fyne.Window) {
 	saveBtn := widget.NewButton("Save", nil)
 	saveBtn.Disable()
 
+	loadPath := func(path string) {
+		save, err := savegame.Load(path)
+		if err != nil {
+			dialog.ShowError(fmt.Errorf("load %s: %w", filepath.Base(path), err), w)
+			return
+		}
+		model.SetSave(save)
+		pathLabel.SetText(path)
+		charSelect.Options = model.CharacterNames()
+		charSelect.Refresh()
+		if len(charSelect.Options) > 0 {
+			charSelect.SetSelected(charSelect.Options[0])
+			charSelect.Enable()
+		}
+		saveBtn.Enable()
+		panel.Show(model.Current)
+	}
+
 	openBtn := widget.NewButton("Open save…", func() {
 		fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
 			if err != nil {
@@ -45,25 +64,9 @@ func BuildMainWindow(w fyne.Window) {
 			}
 			path := rc.URI().Path()
 			_ = rc.Close()
-
-			save, err := savegame.Load(path)
-			if err != nil {
-				dialog.ShowError(fmt.Errorf("load %s: %w", filepath.Base(path), err), w)
-				return
-			}
-			model.SetSave(save)
-			pathLabel.SetText(path)
-			charSelect.Options = model.CharacterNames()
-			charSelect.Refresh()
-			if len(charSelect.Options) > 0 {
-				charSelect.SetSelected(charSelect.Options[0])
-				charSelect.Enable()
-			}
-			saveBtn.Enable()
-			panel.Show(model.Current)
+			loadPath(path)
 		}, w)
 		fd.SetFilter(storage.NewExtensionFileFilter([]string{".xml"}))
-		// Default to the save's directory if we know one.
 		if model.Save != nil {
 			if u, err := storage.ParseURI("file://" + filepath.Dir(model.Save.Path)); err == nil {
 				if dirList, err := storage.ListerForURI(u); err == nil {
@@ -90,6 +93,12 @@ func BuildMainWindow(w fyne.Window) {
 			w)
 	}
 
+	w.SetOnDropped(func(_ fyne.Position, uris []fyne.URI) {
+		if path := pickXMLPath(uris); path != "" {
+			loadPath(path)
+		}
+	})
+
 	header := container.NewBorder(
 		nil, nil,
 		container.NewHBox(openBtn, saveBtn),
@@ -100,6 +109,20 @@ func BuildMainWindow(w fyne.Window) {
 
 	w.SetContent(container.NewBorder(top, nil, nil, nil, panel.Container()))
 	w.Resize(fyne.NewSize(820, 640))
+}
+
+// pickXMLPath returns the path of the first dropped URI with a .xml extension,
+// falling back to the first URI if none match. Returns "" if uris is empty.
+func pickXMLPath(uris []fyne.URI) string {
+	for _, u := range uris {
+		if u != nil && strings.EqualFold(filepath.Ext(u.Path()), ".xml") {
+			return u.Path()
+		}
+	}
+	if len(uris) > 0 && uris[0] != nil {
+		return uris[0].Path()
+	}
+	return ""
 }
 
 // dialogSize returns a reasonable default dialog size relative to the parent.

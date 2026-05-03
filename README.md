@@ -1,39 +1,60 @@
-#Wasteland-2-caracter-editor (Tested with Director's cut)
-SaveGameCaracterEditor for Wasteland 2 (Game character editor for Wasteland 2).
-Developed purely from passion, written in Delphi and completely free.
-However, despite the fact that the project is free, you can always support it by buying the developer a coffee.
+# Wasteland 2 Editor
 
-04/21/2020 the source code became open (suffer mortals, for it is terrible)
+Cross-platform save editor for **Wasteland 2: Director's Cut**. Linux and Windows, single static binary, no system dependencies beyond the OpenGL/X11 libraries every desktop ships with.
 
-The editor has sufficient functionality to make changes to the characteristics of units.
-You can edit all skills (weapon, general, technical) and attributes. 
-The interface is intuitive, but, nevertheless, you can watch a video of editing SaveGames in order to understand the principle of operation.
+A Go + Fyne port of [Tokeshy/Wasteland-2-caracter-editor](https://github.com/Tokeshy/Wasteland-2-caracter-editor). The original Delphi editor corrupts current saves (it writes the legacy `<attributes>...<pair><key>` dictionary format while the live game uses `<attributes2>...<KeyValuePairOfStringInt32>...`); this rewrite targets the modern format and round-trips a real 1.7 MB save **byte-for-byte identical** when nothing is edited.
 
-Well, one more thing - this project will continue to remain absolutely free, regardless of functionality..
-Therefore, if someone tries to sell it to you, they are scammers 😉
-=================================
+## Features
 
-changes in version 3 (currently implemented)
-from code point:
-  the internal structure has undergone significant rethinking and processing (let's just start with a “clean slate”);
-  also fixed the creation errors, which previously led to corruption of the game file;
-  The game file is now overwritten only when changes are saved;
+- Edit attributes (Coordination / Luck / Awareness / Strength / Speed / Intelligence / Charisma)
+- Edit weapon, general, and technical skills (level 0–10)
+- Drag-and-drop a save XML onto the window, or use **Open save…**
+- Backup-on-save: writes `<savename>.xml.back` before overwriting
+- Inventory, equipment, position, quest state — everything outside the two skill/attribute dictionary blocks is passed through untouched
 
-from the user's point: 
-  for user convenience, the save file is now scanned immediately after selection;
-  The bill interface has been redesigned (some buttons have been removed)
-  when saving, a backup copy of the original file is also created (in case something goes wrong)
+## Build
 
-=================================
+```sh
+go build ./cmd/wasteland-2-editor
+./wasteland-2-editor
+```
 
-coming soon:
-  DragNDrop support;
-  resetting\applying a common value to all skills by category;
-  adding a timestamp when naming the backup file;
-  correction of invalid values ​​(for example, in case of file processing after “manual correction”)
+Tested with Go 1.26. Fyne pulls a handful of indirect dependencies on first build.
 
-=================================
+## Usage
 
-feasibility is being studied:  
-  editing all available unit parameters (experience points, name, age, etc.).
-  the possibility of completely editing the inventory is being considered (if it suddenly turns out that someone needs it) - there is certainly no certainty about the need, given the amount of work
+1. Open or drag your `Quicksave N/Quicksave N.xml` (or any save XML) onto the window.
+2. Pick a character from the dropdown.
+3. Drag sliders on any of the four tabs.
+4. Click **Save**. The original is renamed to `*.xml.back`.
+
+Save files live under:
+
+- Linux (Steam + Proton): `~/.steam/steam/steamapps/compatdata/240760/pfx/drive_c/users/steamuser/Documents/My Games/Wasteland2/Save Games/`
+- Windows: `%USERPROFILE%\Documents\My Games\Wasteland2\Save Games\`
+
+## Project layout
+
+```
+cmd/wasteland-2-editor/  entry point
+internal/savegame/       stdlib XML parser + tests
+internal/ui/             Fyne UI (window, character panel, skill tabs/rows)
+delphi-original/         (gitignored) original Delphi sources, kept for reference
+```
+
+## Tests
+
+```sh
+go test ./...
+```
+
+The real-savegame tests are skipped automatically if `Quicksave 2/Quicksave 2.xml` isn't present.
+
+## Known caveats
+
+- The editor doesn't currently track or update `availableSkillPoints` — you can raise sliders past what the character has earned. The game appears to ignore the field on load.
+- Skill XP is set directly via the cumulative-cost table (`0,2,4,6,10,14,18,24,30,36,44`); intermediate values are not preserved.
+
+## License
+
+Same spirit as the original: free, no warranty. Make a backup before editing.
