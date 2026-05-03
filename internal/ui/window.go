@@ -86,7 +86,7 @@ func BuildMainWindow(w fyne.Window) {
 		if model.Save == nil {
 			return
 		}
-		if err := model.Save.Save(model.Save.Path); err != nil {
+		if err := model.Save.WriteTo(model.Save.Path); err != nil {
 			dialog.ShowError(err, w)
 			return
 		}

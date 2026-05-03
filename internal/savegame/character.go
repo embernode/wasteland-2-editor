@@ -3,6 +3,7 @@ package savegame
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -50,9 +51,6 @@ type Character struct {
 }
 
 const (
-	pcDataOpen  = "<PcData>"
-	pcDataClose = "</PcData>"
-
 	attrOpen   = "<attributes2>"
 	attrClose  = "</attributes2>"
 	skillOpen  = "<skillXps2>"
@@ -214,14 +212,15 @@ func extractInner(region []byte, open, close string) string {
 	return string(region[o : o+c])
 }
 
-// cleanDisplayName turns "<@>Hex{F}" into "Hex".
+// genderSuffix matches a trailing single-uppercase-letter gender marker the
+// game appends to display names, e.g. {F}, {M}, {N}.
+var genderSuffix = regexp.MustCompile(`\{[A-Z]\}$`)
+
+// cleanDisplayName turns "<@>Hex{F}" into "Hex". Only the trailing gender
+// marker is stripped — other braced text (if any) is preserved.
 func cleanDisplayName(raw string) string {
 	s := strings.TrimPrefix(raw, "<@>")
 	s = strings.TrimPrefix(s, atMarker)
-	if i := strings.LastIndex(s, "{"); i >= 0 {
-		if j := strings.LastIndex(s, "}"); j > i {
-			s = s[:i] + s[j+1:]
-		}
-	}
+	s = genderSuffix.ReplaceAllString(s, "")
 	return strings.TrimSpace(s)
 }

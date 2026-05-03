@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -73,11 +74,12 @@ func parsePairs(block []byte, into map[string]int) ([]string, error) {
 			case valueElement:
 				inValue = false
 			case pairElement:
-				if curKey != "" && haveKV {
-					if _, exists := into[curKey]; !exists {
-						order = append(order, curKey)
+				key := strings.TrimSpace(curKey)
+				if key != "" && haveKV {
+					if _, exists := into[key]; !exists {
+						order = append(order, key)
 					}
-					into[curKey] = curValue
+					into[key] = curValue
 				}
 			}
 		}
@@ -130,24 +132,13 @@ func escape(s string) string {
 	return b.String()
 }
 
+// parseInt is a thin wrapper around strconv.Atoi that tolerates surrounding
+// whitespace (CharData between pretty-printed XML tags) and treats an empty
+// string as 0.
 func parseInt(s string) (int, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return 0, nil
 	}
-	n, neg := 0, false
-	for i, r := range s {
-		if i == 0 && r == '-' {
-			neg = true
-			continue
-		}
-		if r < '0' || r > '9' {
-			return 0, fmt.Errorf("not a number: %q", s)
-		}
-		n = n*10 + int(r-'0')
-	}
-	if neg {
-		n = -n
-	}
-	return n, nil
+	return strconv.Atoi(s)
 }

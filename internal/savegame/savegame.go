@@ -20,6 +20,11 @@ import (
 	"sort"
 )
 
+const (
+	pcDataOpen  = "<PcData>"
+	pcDataClose = "</PcData>"
+)
+
 // Save is a parsed save game. The original file bytes are preserved so we can
 // write back with minimal changes.
 type Save struct {
@@ -69,9 +74,10 @@ func Parse(raw []byte, path string) (*Save, error) {
 	return s, nil
 }
 
-// Save writes the (possibly edited) save to dst. If dst exists it is renamed
-// to dst+".back" first; any pre-existing .back is removed.
-func (s *Save) Save(dst string) error {
+// WriteTo serializes the (possibly edited) save and writes it to dst. If
+// dst exists it is renamed to dst+".back" first; any pre-existing .back is
+// removed.
+func (s *Save) WriteTo(dst string) error {
 	out, err := s.Bytes()
 	if err != nil {
 		return err
