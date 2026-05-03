@@ -37,7 +37,8 @@ type Palette struct {
 }
 
 // WastelandPalette — Stitch "Post-Apocalyptic Terminal": amber primary,
-// grimy desert browns, phosphor green reserved for thin focus rings.
+// grimy desert browns. Focus / selection are dark amber so foreground text
+// stays legible (Fyne uses both as fill backgrounds, not outlines).
 var WastelandPalette = Palette{
 	Name:             "Wasteland",
 	Surface:          mustColor("#17130f"),
@@ -50,7 +51,7 @@ var WastelandPalette = Palette{
 	Primary:          mustColor("#ffb86e"),
 	PrimaryHover:     mustColor("#e68a00"),
 	Selection:        mustColor("#492900"),
-	Focus:            mustColor("#5dff3b"),
+	Focus:            mustColor("#492900"),
 	Error:            mustColor("#ffb4ab"),
 }
 
@@ -68,7 +69,7 @@ var PrecisionPalette = Palette{
 	Primary:          mustColor("#00dbe9"),
 	PrimaryHover:     mustColor("#00f0ff"),
 	Selection:        mustColor("#004f54"),
-	Focus:            mustColor("#00f0ff"),
+	Focus:            mustColor("#004f54"),
 	Error:            mustColor("#ffb4ab"),
 }
 
