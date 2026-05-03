@@ -3,15 +3,20 @@ package ui
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/embernode/wasteland-2-editor/internal/savegame"
 )
 
-// CharacterPanel is the per-character editing area: four tabs (attributes,
-// weapon skills, general skills, technical skills), each driven by the
-// constant skill lists in package savegame.
+// CharacterPanel is the per-character editing area: an unspent-points
+// header above four tabs (attributes, weapon skills, general skills,
+// technical skills). Each tab is driven by the constant skill lists in
+// package savegame.
 type CharacterPanel struct {
-	tabs *container.AppTabs
+	body fyne.CanvasObject
+
+	points *PointsBar
+	tabs   *container.AppTabs
 
 	attributes *SkillTab
 	weapons    *SkillTab
@@ -23,6 +28,7 @@ type CharacterPanel struct {
 // loaded) state.
 func NewCharacterPanel() *CharacterPanel {
 	p := &CharacterPanel{
+		points:     newPointsBar(),
 		attributes: newSkillTab(savegame.Attributes, scaleDirect, 1, 10),
 		weapons:    newSkillTab(savegame.WeaponSkills, scaleSkillXP, 0, 10),
 		general:    newSkillTab(savegame.GeneralSkills, scaleSkillXP, 0, 10),
@@ -34,21 +40,25 @@ func NewCharacterPanel() *CharacterPanel {
 		container.NewTabItem("General", p.general.body),
 		container.NewTabItem("Technical", p.technical.body),
 	)
+	header := container.NewVBox(p.points.body, widget.NewSeparator())
+	p.body = container.NewBorder(header, nil, nil, nil, p.tabs)
 	return p
 }
 
 // Container returns the Fyne object to embed in a parent layout.
-func (p *CharacterPanel) Container() fyne.CanvasObject { return p.tabs }
+func (p *CharacterPanel) Container() fyne.CanvasObject { return p.body }
 
-// Show binds all tabs to a character. Pass nil to clear.
+// Show binds the points bar and all tabs to a character. Pass nil to clear.
 func (p *CharacterPanel) Show(c *savegame.Character) {
 	if c == nil {
+		p.points.clear()
 		p.attributes.clear()
 		p.weapons.clear()
 		p.general.clear()
 		p.technical.clear()
 		return
 	}
+	p.points.bind(c)
 	p.attributes.bind(c.Attributes)
 	p.weapons.bind(c.Skills)
 	p.general.bind(c.Skills)

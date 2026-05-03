@@ -114,10 +114,12 @@ func TestRealSave_EditPersists(t *testing.T) {
 		t.Fatalf("Parse: %v", err)
 	}
 
-	// Bump every character's strength to 10, every skill's rifle to level 10.
+	// Bump strength to 10, rifle to level 10, give 99 spare points to each.
 	for _, c := range s.Characters {
 		c.Attributes["strength"] = 10
 		c.Skills["rifle"] = SkillXP(10)
+		c.AvailableAttributePoints = 7
+		c.AvailableSkillPoints = 99
 	}
 
 	out, err := s.Bytes()
@@ -142,6 +144,34 @@ func TestRealSave_EditPersists(t *testing.T) {
 			t.Errorf("character[%d] rifle = %d (level %d), want level 10",
 				i, c.Skills["rifle"], SkillLevel(c.Skills["rifle"]))
 		}
+		if c.AvailableAttributePoints != 7 {
+			t.Errorf("character[%d] AvailableAttributePoints = %d, want 7",
+				i, c.AvailableAttributePoints)
+		}
+		if c.AvailableSkillPoints != 99 {
+			t.Errorf("character[%d] AvailableSkillPoints = %d, want 99",
+				i, c.AvailableSkillPoints)
+		}
+	}
+}
+
+func TestRealSave_AvailablePointsParsed(t *testing.T) {
+	s, err := Load(realSavePath(t))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	// Hex (character 0) — observed in raw XML:
+	// <availableAttributePoints>0</availableAttributePoints>
+	// <availableSkillPoints>6</availableSkillPoints>
+	hex := s.Characters[0]
+	if hex.DisplayName != "Hex" {
+		t.Fatalf("expected character[0] = Hex, got %q", hex.DisplayName)
+	}
+	if hex.AvailableAttributePoints != 0 {
+		t.Errorf("Hex.AvailableAttributePoints = %d, want 0", hex.AvailableAttributePoints)
+	}
+	if hex.AvailableSkillPoints != 6 {
+		t.Errorf("Hex.AvailableSkillPoints = %d, want 6", hex.AvailableSkillPoints)
 	}
 }
 

@@ -89,20 +89,13 @@ func (s *Save) Save(dst string) error {
 	return nil
 }
 
-// Bytes returns the serialized save with edited attribute/skill blocks
-// spliced into the original byte buffer. Everything outside those blocks is
-// passed through unchanged.
+// Bytes returns the serialized save with each character's edited regions
+// spliced into the original byte buffer. Everything outside those regions
+// passes through unchanged.
 func (s *Save) Bytes() ([]byte, error) {
-	type edit struct {
-		start, end int
-		body       []byte
-	}
-	edits := make([]edit, 0, len(s.Characters)*2)
+	var edits []byteEdit
 	for _, c := range s.Characters {
-		edits = append(edits,
-			edit{c.attrStart, c.attrEnd, renderPairs(attrOpen, attrClose, c.Attributes, c.attrOrder)},
-			edit{c.skillStart, c.skillEnd, renderPairs(skillOpen, skillClose, c.Skills, c.skillOrder)},
-		)
+		edits = append(edits, c.edits()...)
 	}
 	sort.Slice(edits, func(i, j int) bool { return edits[i].start < edits[j].start })
 
