@@ -24,10 +24,24 @@ const PreferenceKeyTheme = "theme"
 func BuildMainWindow(w fyne.Window) {
 	app := fyne.CurrentApp()
 	model := &Model{}
-	panel := NewCharacterPanel()
 
 	pathLabel := widget.NewLabel("No save loaded.")
 	pathLabel.Wrapping = fyne.TextTruncate
+
+	updatePathLabel := func() {
+		if model.Save == nil {
+			pathLabel.SetText("No save loaded.")
+			return
+		}
+		text := filepath.Base(model.Save.Path)
+		if model.IsDirty() {
+			text += " •"
+		}
+		pathLabel.SetText(text)
+	}
+	model.OnDirtyChange = updatePathLabel
+
+	panel := NewCharacterPanel(model.MarkDirty)
 
 	themeSelect := widget.NewSelect(ThemeNames(), nil)
 	themeSelect.SetSelected(app.Preferences().StringWithFallback(PreferenceKeyTheme, WastelandPalette.Name))
@@ -51,14 +65,31 @@ func BuildMainWindow(w fyne.Window) {
 			dialog.ShowError(fmt.Errorf("load %s: %w", filepath.Base(path), err), w)
 			return
 		}
-		model.SetSave(save)
-		pathLabel.SetText(filepath.Base(path))
+		model.SetSave(save) // also clears dirty + fires updatePathLabel
 		sidebar.SetOptions(model.CharacterNames())
 		saveBtn.Enable()
 		panel.Show(model.Current)
 	}
 
-	openBtn := widget.NewButton("Open save…", func() {
+	// confirmIfDirty wraps any operation that would discard unsaved edits.
+	confirmIfDirty := func(action string, then func()) {
+		if !model.IsDirty() {
+			then()
+			return
+		}
+		dialog.ShowConfirm(
+			"Discard unsaved changes?",
+			fmt.Sprintf("You have unsaved edits. %s anyway?", action),
+			func(ok bool) {
+				if ok {
+					then()
+				}
+			},
+			w,
+		)
+	}
+
+	showOpenDialog := func() {
 		fd := dialog.NewFileOpen(func(rc fyne.URIReadCloser, err error) {
 			if err != nil {
 				dialog.ShowError(err, w)
@@ -81,6 +112,10 @@ func BuildMainWindow(w fyne.Window) {
 		}
 		fd.Resize(dialogSize(w))
 		fd.Show()
+	}
+
+	openBtn := widget.NewButton("Open save…", func() {
+		confirmIfDirty("Open a different save", showOpenDialog)
 	})
 
 	saveBtn.OnTapped = func() {
@@ -91,16 +126,32 @@ func BuildMainWindow(w fyne.Window) {
 			dialog.ShowError(err, w)
 			return
 		}
-		dialog.ShowInformation("Saved",
-			fmt.Sprintf("Wrote %s\n(backup: %s.back)",
-				filepath.Base(model.Save.Path), filepath.Base(model.Save.Path)),
-			w)
+		model.ClearDirty() // fires updatePathLabel; no modal toast
 	}
 
 	w.SetOnDropped(func(_ fyne.Position, uris []fyne.URI) {
-		if path := pickXMLPath(uris); path != "" {
-			loadPath(path)
+		path := pickXMLPath(uris)
+		if path == "" {
+			return
 		}
+		confirmIfDirty("Open the dropped file", func() { loadPath(path) })
+	})
+
+	w.SetCloseIntercept(func() {
+		if !model.IsDirty() {
+			w.Close()
+			return
+		}
+		dialog.ShowConfirm(
+			"Unsaved changes",
+			"You have unsaved edits. Quit anyway?",
+			func(ok bool) {
+				if ok {
+					w.Close()
+				}
+			},
+			w,
+		)
 	})
 
 	// Cmd/Ctrl-O = Open save…  ;  Cmd/Ctrl-S = Save (when enabled).

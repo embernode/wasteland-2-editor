@@ -30,10 +30,11 @@ type SkillRow struct {
 	slider  *widget.Slider
 	target  map[string]int
 	enabled bool
+	onEdit  func()
 }
 
-func newSkillRow(key string, scale scaleKind, min, max int) *SkillRow {
-	r := &SkillRow{key: key, scale: scale, min: min, max: max}
+func newSkillRow(key string, scale scaleKind, min, max int, onEdit func()) *SkillRow {
+	r := &SkillRow{key: key, scale: scale, min: min, max: max, onEdit: onEdit}
 	r.level = widget.NewLabelWithStyle(
 		fmt.Sprintf("0/%d", max),
 		fyne.TextAlignTrailing,
@@ -44,12 +45,16 @@ func newSkillRow(key string, scale scaleKind, min, max int) *SkillRow {
 	r.slider.OnChanged = func(v float64) {
 		level := int(v)
 		r.level.SetText(fmt.Sprintf("%d/%d", level, max))
-		if r.target != nil {
-			if r.scale == scaleSkillXP {
-				r.target[r.key] = savegame.SkillXP(level)
-			} else {
-				r.target[r.key] = level
-			}
+		if r.target == nil {
+			return // bind() in progress; don't touch the model
+		}
+		if r.scale == scaleSkillXP {
+			r.target[r.key] = savegame.SkillXP(level)
+		} else {
+			r.target[r.key] = level
+		}
+		if r.onEdit != nil {
+			r.onEdit()
 		}
 	}
 	r.slider.Disable()

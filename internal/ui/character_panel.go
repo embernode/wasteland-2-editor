@@ -23,14 +23,15 @@ type CharacterPanel struct {
 }
 
 // NewCharacterPanel constructs the editing panel in its empty (no save
-// loaded) state.
-func NewCharacterPanel() *CharacterPanel {
+// loaded) state. onEdit is invoked on every user-driven change to any
+// editing widget — typically wired to Model.MarkDirty.
+func NewCharacterPanel(onEdit func()) *CharacterPanel {
 	p := &CharacterPanel{
-		stats:      newStatsCards(),
-		attributes: newSkillTab(savegame.Attributes, scaleDirect, 1, 10),
-		weapons:    newSkillTab(savegame.WeaponSkills, scaleSkillXP, 0, 10),
-		general:    newSkillTab(savegame.GeneralSkills, scaleSkillXP, 0, 10),
-		technical:  newSkillTab(savegame.TechnicalSkills, scaleSkillXP, 0, 10),
+		stats:      newStatsCards(onEdit),
+		attributes: newSkillTab(savegame.Attributes, scaleDirect, 1, 10, onEdit),
+		weapons:    newSkillTab(savegame.WeaponSkills, scaleSkillXP, 0, 10, onEdit),
+		general:    newSkillTab(savegame.GeneralSkills, scaleSkillXP, 0, 10, onEdit),
+		technical:  newSkillTab(savegame.TechnicalSkills, scaleSkillXP, 0, 10, onEdit),
 	}
 	p.tabs = container.NewAppTabs(
 		container.NewTabItem("Attributes", p.attributes.body),

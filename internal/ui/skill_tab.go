@@ -12,11 +12,11 @@ type SkillTab struct {
 	body fyne.CanvasObject
 }
 
-func newSkillTab(keys []string, scale scaleKind, min, max int) *SkillTab {
+func newSkillTab(keys []string, scale scaleKind, min, max int, onEdit func()) *SkillTab {
 	t := &SkillTab{rows: make([]*SkillRow, 0, len(keys))}
 	rowObjs := make([]fyne.CanvasObject, 0, len(keys))
 	for _, k := range keys {
-		r := newSkillRow(k, scale, min, max)
+		r := newSkillRow(k, scale, min, max, onEdit)
 		t.rows = append(t.rows, r)
 		rowObjs = append(rowObjs, r.container())
 	}

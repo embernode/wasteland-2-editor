@@ -57,29 +57,38 @@ type StatsCards struct {
 	summary  *widget.Label
 	body     fyne.CanvasObject
 	target   *savegame.Character
+	onEdit   func()
 }
 
-func newStatsCards() *StatsCards {
-	s := &StatsCards{}
+func newStatsCards(onEdit func()) *StatsCards {
+	s := &StatsCards{onEdit: onEdit}
 	s.level = newPointsEntry(func(n int) {
-		if s.target != nil {
-			s.target.Level = n
+		if s.target == nil {
+			return
 		}
+		s.target.Level = n
+		s.notifyEdit()
 	})
 	s.curHP = newPointsEntry(func(n int) {
-		if s.target != nil {
-			s.target.CurrentHP = n
+		if s.target == nil {
+			return
 		}
+		s.target.CurrentHP = n
+		s.notifyEdit()
 	})
 	s.attrPts = newPointsEntry(func(n int) {
-		if s.target != nil {
-			s.target.AvailableAttributePoints = n
+		if s.target == nil {
+			return
 		}
+		s.target.AvailableAttributePoints = n
+		s.notifyEdit()
 	})
 	s.skillPts = newPointsEntry(func(n int) {
-		if s.target != nil {
-			s.target.AvailableSkillPoints = n
+		if s.target == nil {
+			return
 		}
+		s.target.AvailableSkillPoints = n
+		s.notifyEdit()
 	})
 	s.disableAll()
 
@@ -132,6 +141,12 @@ func (s *StatsCards) disableAll() {
 	s.curHP.Disable()
 	s.attrPts.Disable()
 	s.skillPts.Disable()
+}
+
+func (s *StatsCards) notifyEdit() {
+	if s.onEdit != nil {
+		s.onEdit()
+	}
 }
 
 func summaryLine(c *savegame.Character) string {
